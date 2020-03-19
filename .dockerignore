@@ -1,0 +1,8 @@
+.DS_Store
+.vscode
+*.pyc
+__pycache__
+accessory.state
+test
+bridge.example.py
+nohup.out
