@@ -2,12 +2,14 @@ import miio
 import math
 import logging
 
+from threading import Timer
+
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_SWITCH
 
 logger = logging.getLogger(__name__)
 
-UPDATE_INTERVAL = 10
+RETRY_INTERVAL = 15
 
 SORTED_MODE_MAP = ((100, miio.airfresh.OperationMode.Strong),
                    (90, miio.airfresh.OperationMode.Middle),
@@ -51,6 +53,12 @@ class AirFresh(Accessory):
 
         self.conn = None
 
+        self.mode = None
+        self.power = None
+        self.pos = None
+
+        self.set_mode_delay = None
+
         serv_fan = self.add_preload_service('Fan', [
             'RotationSpeed'
         ])
@@ -59,35 +67,50 @@ class AirFresh(Accessory):
         self.on = serv_fan.configure_char('On', setter_callback=self.set_on)
 
     def set_on(self, value):
-        logger.debug('set_on(%s):', value)
-        # if self.conn is not None:
-        if value:
-            self.conn.on()
-            logger.debug('self.conn.on()')
-        else:
-            self.conn.off()
-            logger.debug('self.conn.off()')
+        logger.debug('set_on(%s)', value)
+
+        if self.conn is None:
+            return
+
+        power = (value == 1)
+
+        if power != self.power:
+            self.power = power
+
+            if self.power:
+                self.conn.on()
+                logger.debug('set_on: self.conn.on()')
+            else:
+                self.conn.off()
+                logger.debug('set_on: self.conn.off()')
+
+    def set_mode(self, mode):
+        logger.debug('set_mode(%s)', mode)
+
+        if self.mode != mode:
+            self.mode = mode
+            self.conn.set_mode(self.mode)
+            logger.debug('set_rotation_speed: self.conn.set_mode(%s)', self.mode)
 
     def set_rotation_speed(self, value):
-        logger.debug('set_rotation_speed(%s):', value)
-        pos = get_classification(value, SORTED_POS_MAP)
-        mode = get_classification(pos, SORTED_MODE_MAP)
+        logger.debug('set_rotation_speed(%s)', value)
 
-        # if self.conn is not None:
-        if mode is None:
-            logger.debug('set_rotation_speed > mode is None')
-            # self.on.set_value(False)
-            # self.conn.off()
-        else:
-            logger.debug('set_rotation_speed > mode is not None')
-            # self.on.set_value(True)
-            # self.conn.on()
-            self.conn.set_mode(mode)
-            logger.debug('self.conn.set_mode(%s)', mode)
-            # if self.st.mode != mode:
+        if self.conn is None:
+            return
 
-        self.rotation_speed.set_value(pos)
-        logger.debug('self.rotation_speed.set_value(%s)', pos)
+        if value != self.pos:
+            self.pos = get_classification(value, SORTED_POS_MAP)
+
+            self.rotation_speed.set_value(self.pos)
+            logger.debug('set_rotation_speed: self.rotation_speed.set_value(%s)', self.pos)
+
+            mode = get_classification(self.pos, SORTED_MODE_MAP)
+
+            if (self.set_mode_delay is not None):
+                self.set_mode_delay.cancel()
+
+            self.set_mode_delay = Timer(1.0, self.set_mode, (mode,))
+            self.set_mode_delay.start()
 
     def add_info_service(self):
         info_service = self.driver.loader.get_service('AccessoryInformation')
@@ -97,29 +120,30 @@ class AirFresh(Accessory):
         info_service.configure_char('Manufacturer', value='Nikolay Borisov')
         self.add_service(info_service)
 
-    # @Accessory.run_at_interval(UPDATE_INTERVAL)
+    @Accessory.run_at_interval(RETRY_INTERVAL)
     async def run(self):
         try:
             if self.conn is None:
                 logger.debug("try conn monitor...")
                 self.conn = miio.airfresh.AirFresh(ip=self.ip, token=self.token)
 
-            st = self.conn.status()
+                st = self.conn.status()
 
-            if st.power == 'off':
-                self.on.set_value(False)
-                logger.debug('self.on.set_value(False)')
-            else:
-                self.on.set_value(True)
-                logger.debug('self.on.set_value(True)')
+                if st.power == 'off':
+                    self.on.set_value(False)
+                    logger.debug('self.on.set_value(False)')
+                else:
+                    self.on.set_value(True)
+                    logger.debug('self.on.set_value(True)')
 
-            pos = get_position(st.mode)
-            self.rotation_speed.set_value(pos)
-            logger.debug('self.rotation_speed.set_value(%s)', pos)
+                self.pos = get_position(st.mode)
+                self.rotation_speed.set_value(self.pos)
+                logger.debug('self.rotation_speed.set_value(%s)', self.pos)
 
-            logger.debug(st)
+                self.mode = st.mode
+                self.power = (st.power == 'on')
 
-            self.st = st
+                logger.debug(st)
 
         except Exception as ex:
             logger.error(ex)

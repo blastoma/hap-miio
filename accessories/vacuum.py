@@ -67,7 +67,11 @@ class Vacuum(Accessory):
             self.charging_state.set_value(st.charging_state)
             self.low_battery.set_value(st.low_battery)
 
+            self.char_on.set_value(int(st.is_on))
+
             self.st = st
+
+            logger.debug(st)
 
         except Exception as ex:
             logger.error(ex)
