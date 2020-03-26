@@ -71,7 +71,7 @@ class AirQualityMonitor(Accessory):
         self.co2_level = serv_co2.configure_char('CarbonDioxideLevel')
 
         self.battery_level = serv_battery.configure_char('BatteryLevel')
-        #self.charging_state = serv_battery.configure_char('ChargingState')
+        self.charging_state = serv_battery.configure_char('ChargingState')
         self.low_battery = serv_battery.configure_char('StatusLowBattery')
 
     def add_info_service(self):
@@ -111,6 +111,7 @@ class AirQualityMonitor(Accessory):
             self.co2_detected.set_value(st.co2_detected)
             self.co2_level.set_value(st.co2)
 
+            self.charging_state.set_value(st.battery == 100)
             self.battery_level.set_value(st.battery)
             self.low_battery.set_value(st.low_battery)
             self.active.set_value(True)
