@@ -127,23 +127,24 @@ class AirFresh(Accessory):
                 logger.debug("try conn monitor...")
                 self.conn = miio.airfresh.AirFresh(ip=self.ip, token=self.token)
 
-                st = self.conn.status()
+            st = self.conn.status()
 
-                if st.power == 'off':
-                    self.on.set_value(False)
-                    logger.debug('self.on.set_value(False)')
-                else:
-                    self.on.set_value(True)
-                    logger.debug('self.on.set_value(True)')
+            power = (st.power == 'on')
+            pos = get_position(st.mode)
 
-                self.pos = get_position(st.mode)
+            if (power != self.power):
+                self.power = power
+                self.on.set_value(power)
+                logger.debug('self.on.set_value(%s)', power)
+
+            if (self.pos != pos):
+                self.pos = pos
                 self.rotation_speed.set_value(self.pos)
                 logger.debug('self.rotation_speed.set_value(%s)', self.pos)
 
-                self.mode = st.mode
-                self.power = (st.power == 'on')
+            self.mode = st.mode
 
-                logger.debug(st)
+            logger.debug(st)
 
         except Exception as ex:
             logger.error(ex)
