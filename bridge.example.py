@@ -11,6 +11,7 @@ from accessories.air_quality_monitor import AirQualityMonitor
 from accessories.vacuum import Vacuum
 from accessories.air_fresh import AirFresh
 from accessories.presence import Presence
+from accessories.dummy_switch import DummySwitch
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -31,6 +32,9 @@ bridge.add_accessory(air_fresh)
 
 nikolay_at_home = Presence(driver, 'Nikolay', hostname='192.168.1.4')
 bridge.add_accessory(nikolay_at_home)
+
+trigger = DummySwitch(driver, 'Trigger')
+bridge.add_accessory(trigger)
 
 driver.add_accessory(bridge)
 
