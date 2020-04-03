@@ -1,7 +1,7 @@
 import logging
 
 from pyhap.accessory import Accessory
-from pyhap.const import CATEGORY_SWITCH, CATEGORY_PROGRAMMABLE_SWITCH
+from pyhap.const import CATEGORY_SWITCH
 
 logger = logging.getLogger(__name__)
 

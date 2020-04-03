@@ -7,7 +7,7 @@ from pyhap.const import CATEGORY_SENSOR
 
 logger = logging.getLogger(__name__)
 
-UPDATE_INTERVAL = 5
+UPDATE_INTERVAL = 30
 
 SORTED_TVOC_QUALITY_MAP = ((2000, 5), (660, 4), (220, 3), (65, 2), (0, 1))
 SORTED_PM25_QUALITY_MAP = ((100, 5), (55, 4), (35, 3), (12, 2), (0, 1))
