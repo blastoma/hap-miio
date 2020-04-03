@@ -206,9 +206,6 @@ class AirFresh(Accessory):
                 self.co2_detected.set_value(st.co2_detected)
                 self.co2_level.set_value(st.co2)
 
-                logger.error(st.humidity)
-                logger.error(st.temperature)
-
                 self.set_active(True)
             else:
                 self.set_active(False)
