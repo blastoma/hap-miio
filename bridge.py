@@ -24,17 +24,8 @@ bridge = Bridge(driver, 'Bridge')
 air_quality = AirQualityMonitor(driver, 'Air Monitor', ip='192.168.1.1', token='XXX')
 bridge.add_accessory(air_quality)
 
-vacuum = Vacuum(driver, 'Vacuum', ip='192.168.1.2', token='XXX')
-bridge.add_accessory(vacuum)
-
-air_fresh = AirFresh(driver, 'Air Fresh', ip='192.168.1.3', token='XXX')
+air_fresh = AirFresh(driver, 'Air Fresh', ip='192.168.1.71', token='XXX')
 bridge.add_accessory(air_fresh)
-
-nikolay_at_home = Presence(driver, 'Nikolay', hostname='192.168.1.4')
-bridge.add_accessory(nikolay_at_home)
-
-trigger = DummySwitch(driver, 'Trigger')
-bridge.add_accessory(trigger)
 
 driver.add_accessory(bridge)
 
